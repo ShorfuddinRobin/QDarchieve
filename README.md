@@ -4,7 +4,7 @@
 **GitHub Repository:** https://github.com/ShorfuddinRobin/QDarchieve  
 **Project:** SQ26 – Seeding QDArchive  
 **Supervisor:** Prof. Dr. Dirk Riehle, FAU Erlangen-Nürnberg  
-**Semester:** Summer 2026  
+
 
 ---
 
