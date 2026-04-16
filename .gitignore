@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Data folder (upload separately to FAUbox / Google Drive)
+data/
+
+# Exported CSVs (regenerate from DB)
+export/csv/
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# The database IS committed (required by professor)
+# 23129103-seeding.db  ← do NOT ignore this
