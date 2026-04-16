@@ -237,7 +237,7 @@ Neither repository has a dedicated filter for "QDA files". Searching for `qdpx` 
 
 - [x] `23129103-seeding.db` in root of GitHub repository
 - [x] Git tag `part-1-release` on final commit
-- [ ] `data/` folder uploaded to FAUbox or Google Drive
+- [ ] `data/` folder uploaded to FAUbox 
 - [ ] Professor's submission form filled in with GitHub link and data folder link
 
 ---
