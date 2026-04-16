@@ -163,7 +163,7 @@ pip install -r requirements.txt
 
 Run scrapers:
 
-```
+`
 python main.py --repo dans
 python main.py --repo halle
 ```
@@ -173,7 +173,7 @@ python main.py --repo halle
 # 📂 Data Availability
 
 The `data/` folder (~3.5 GB) is not included in this repository.
-It is uploaded separately via FAUbox / Google Drive.
+It is uploaded separately via FAUbox.
 
 ---
 
