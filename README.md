@@ -3,150 +3,236 @@
 **Student ID:** 23129103  
 **GitHub Repository:** https://github.com/ShorfuddinRobin/QDarchieve  
 **Project:** SQ26 – Seeding QDArchive  
-**Supervisor:** Prof. Dr. Dirk Riehle, FAU Erlangen-Nürnberg  
-
+**Supervisor:** Prof. Dr. Dirk Riehle, FAU Erlangen-Nürnberg
 
 ---
 
-## What This Project Does
+# Overview
 
-This repository implements **Part 1 (Data Acquisition)** of the Seeding QDArchive project. The goal is to discover, download, and catalogue qualitative research data projects from assigned public repositories, storing all metadata in a structured SQLite database.
+This repository implements **Part 1 (Data Acquisition)** of the Seeding QDArchive project.
 
-**Assigned repositories:**
-| ID | Name | URL | Software |
-|----|------|-----|----------|
-| 5  | DANS SSH DataStations | https://ssh.datastations.nl | Dataverse |
+The objective of Part 1 is to:
+
+- Discover qualitative research projects from the assigned repositories.
+- Download all publicly accessible project files.
+- Extract and preserve metadata without modification.
+- Store all information in a structured SQLite database.
+- Prepare the acquired data for Part 2 (Classification).
+
+---
+
+# Assigned Repositories
+
+| ID | Repository | URL | Platform |
+|----|------------|-----|----------|
+| 5 | DANS SSH DataStations | https://ssh.datastations.nl | Dataverse |
 | 16 | Open Data Uni Halle | https://opendata.uni-halle.de | DSpace 5/6 |
 
 ---
 
-## Repository Structure
+# Repository Structure
 
-```
+```text
 QDarchieve/
-├── 23129103-seeding.db          ← SQLite database (submission artifact)
-├── main.py                      ← Pipeline entry point
-├── requirements.txt
+│
+├── 23129103-seeding.db
+├── main.py
 ├── README.md
+├── requirements.txt
 ├── .gitignore
 │
 ├── db/
-│   ├── schema.sql               ← All 6 table definitions
-│   └── database.py              ← DB helpers (insert, init, seed)
+│   ├── database.py
+│   └── schema.sql
 │
 ├── pipeline/
-│   └── downloader.py            ← Generic file downloader
+│   └── downloader.py
 │
 ├── scrapers/
-│   ├── dans_scraper.py          ← Repo #5: DANS via Dataverse API
-│   └── uni_halle_scraper.py     ← Repo #16: Uni Halle via DSpace REST + HTML
+│   ├── dans_scraper.py
+│   └── uni_halle_scraper.py
 │
 ├── export/
-│   └── export_csv.py            ← Export DB tables to CSV for inspection
+│   └── export_csv.py
 │
 ├── scripts/
-│   └── retry_failed.py          ← Retry transient download failures
+│   └── retry_failed.py
 │
-└── data/                        ← Downloaded files (uploaded separately to FAUbox)
+└── data/                     (uploaded separately)
     ├── dans/
-    │   └── {project_folder}/
-    │       └── file.qdpx ...
     └── open-data-uni-halle/
-        └── {project_folder}/
-            └── file.pdf ...
 ```
 
 ---
 
-## Database Schema
+# Database Schema
 
-The SQLite database `23129103-seeding.db` contains six tables:
+The acquisition database is stored as:
 
-### REPOSITORIES
-Seed table listing the two assigned repositories.
-```
-id | name | url
+```text
+23129103-seeding.db
 ```
 
-### PROJECTS
-One row per discovered research project.
-```
-id | query_string | repository_id | repository_url | project_url |
-version | title | description | language | doi |
-upload_date | download_date |
-download_repository_folder | download_project_folder | download_version_folder |
-download_method (SCRAPING | API-CALL)
-```
+The database contains six tables.
 
-### FILES
-One row per file belonging to a project.
-```
-id | project_id | file_name | file_type | status
-```
-`status` is one of:
-- `SUCCEEDED`
-- `FAILED_LOGIN_REQUIRED`
-- `FAILED_SERVER_UNRESPONSIVE`
-- `FAILED_TOO_LARGE`
+## REPOSITORIES
 
-### KEYWORDS
-```
-id | project_id | keyword
-```
+Stores repository information.
 
-### PERSON_ROLE
-```
-id | project_id | name | role (AUTHOR | UPLOADER | OWNER | OTHER | UNKNOWN)
-```
-
-### LICENSES
-```
-id | project_id | license
+```text
+id
+name
+url
 ```
 
 ---
 
-## How to Run
+## PROJECTS
 
-### Prerequisites
-- Python 3.10 or higher
+Stores one record for every discovered project.
+
+```text
+id
+query_string
+repository_id
+repository_url
+project_url
+version
+title
+description
+language
+doi
+upload_date
+download_date
+download_repository_folder
+download_project_folder
+download_version_folder
+download_method
+```
+
+---
+
+## FILES
+
+Stores one record for every downloaded (or attempted) file.
+
+```text
+id
+project_id
+file_name
+file_type
+status
+```
+
+Allowed status values:
+
+- SUCCEEDED
+- FAILED_LOGIN_REQUIRED
+- FAILED_SERVER_UNRESPONSIVE
+- FAILED_TOO_LARGE
+
+---
+
+## KEYWORDS
+
+```text
+id
+project_id
+keyword
+```
+
+---
+
+## PERSON_ROLE
+
+```text
+id
+project_id
+name
+role
+```
+
+Allowed roles:
+
+- AUTHOR
+- UPLOADER
+- OWNER
+- OTHER
+- UNKNOWN
+
+---
+
+## LICENSES
+
+```text
+id
+project_id
+license
+```
+
+---
+
+# How to Run
+
+## Requirements
+
+- Python 3.10+
 - pip
 
-### Setup
+---
+
+## Installation
 
 ```bash
 git clone https://github.com/ShorfuddinRobin/QDarchieve
 cd QDarchieve
 
 python3 -m venv venv
-# Windows:
+
+# Windows
 venv\Scripts\activate
-# macOS/Linux:
+
+# Linux/macOS
 source venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
-### Run the Pipeline
+---
+
+## Run the Pipeline
+
+Initialise database
 
 ```bash
-# Initialise database only (creates 23129103-seeding.db)
 python3 main.py --init-only
+```
 
-# Run DANS scraper only (repo #5)
+Run DANS only
+
+```bash
 python3 main.py --repo dans
+```
 
-# Run Uni Halle scraper only (repo #16)
+Run Open Data Uni Halle only
+
+```bash
 python3 main.py --repo halle
+```
 
-# Run both scrapers
+Run both repositories
+
+```bash
 python3 main.py
+```
 
-# Run both and also export CSVs for review
+Export CSV files
+
+```bash
 python3 main.py --export-csv
 ```
 
-### Retry Failed Downloads
+Retry failed downloads
 
 ```bash
 python3 scripts/retry_failed.py
@@ -154,94 +240,334 @@ python3 scripts/retry_failed.py
 
 ---
 
-## Queries Used
+# Search Queries
 
-The following search queries were used across both repositories. These were chosen to maximise recall of QDA-related projects:
+The following search queries were used to maximise retrieval of qualitative research projects.
 
-| Query | Rationale |
-|-------|-----------|
-| `qdpx` | Standard REFI-QDA exchange format |
-| `mqda` | MaxQDA project file extension |
-| `nvp` | NVivo project file extension |
-| `interview study` | Common description in qualitative research |
-| `qualitative research` | Broad catch-all |
-| `qualitative data` | Alternative broad catch-all |
-
----
-
-## Download Method per Repository
-
-| Repository | Method | Reason |
-|---|---|---|
-| DANS SSH DataStations | `API-CALL` | Dataverse exposes a complete Search API (`/api/search`) and file access API (`/api/access/datafile/<id>`). No scraping of HTML was necessary. |
-| Open Data Uni Halle | `SCRAPING` | DSpace 5/6 does not expose a structured search API. Discovery required parsing HTML from `/simple-search`. File metadata was then retrieved from the `/rest/handle/...` endpoint. |
+| Query | Purpose |
+|--------|---------|
+| qdpx | REFI-QDA exchange format |
+| mqda | MAXQDA projects |
+| nvp | NVivo projects |
+| interview study | Interview-based studies |
+| qualitative research | Broad search |
+| qualitative data | Broad search |
 
 ---
 
-## Data Folder
+# Download Method
 
-The `data/` directory is **not committed to Git** (it is listed in `.gitignore`) because it can be several gigabytes.
+| Repository | Method | Description |
+|------------|--------|-------------|
+| DANS SSH DataStations | API-CALL | Uses the Dataverse Search API and Access API. |
+| Open Data Uni Halle | SCRAPING | Uses DSpace HTML pages together with REST metadata endpoints. |
 
-It is uploaded separately to FAUbox / Google Drive and the link is submitted via the professor's form.
+---
 
-Structure of the data folder:
-```
+# Data Folder
+
+The **data/** directory is excluded from Git because it contains several gigabytes of downloaded research data.
+
+The folder is uploaded separately to **FAUbox / Google Drive**.
+
+Example structure:
+
+```text
 data/
 ├── dans/
-│   └── doi_10.17026_SS_ABCDEF/
+│   └── doi_10.xxxxx/
 │       ├── interview_data.qdpx
 │       └── codebook.pdf
+│
 └── open-data-uni-halle/
-    └── 1981185920_12345/
-        ├── study.mqda
-        └── transcript1.docx
+    └── project_folder/
+        ├── transcript.docx
+        └── report.pdf
 ```
 
 ---
 
-## Technical Challenges
+# Technical Challenges
 
-> **Note to assessor:** Per the project requirements, this section documents **data quality and data access challenges** encountered during Part 1. Programming challenges are deliberately excluded.
+Programming issues are intentionally omitted. Only data-related challenges are reported.
 
-### 1. Inconsistent Metadata Completeness
+## 1. Inconsistent Metadata
 
-Both repositories store metadata in very different ways. DANS uses a nested JSON structure with typed metadata blocks (Dublin Core, custom Dataverse fields). Open Data Uni Halle uses a flat Dublin Core array in its REST API. In both cases, many fields are simply absent for older deposits: descriptions are missing, upload dates are stored inconsistently (sometimes only a year, sometimes a full ISO timestamp), and language codes are not normalised (e.g. "German", "de", "deu" all appear for the same language). Per the professor's instruction, raw values were stored without normalisation; this will be resolved in Part 2.
-
-### 2. Keyword Formatting and Data Quality
-
-Keywords in both repositories suffer from severe inconsistency. A single project may list `"interlanguage pragmatics, EFL learners, scoping review"` as one single keyword string rather than three separate entries. Others use semicolons or slashes as delimiters. Some keywords are comma-separated within a single field. Because the instruction is to not change data at this stage, all keyword values were stored exactly as found. Parsing and normalisation is a Part 2 concern.
-
-### 3. Restricted and Login-Gated Files
-
-A significant fraction of datasets — particularly on DANS SSH DataStations — mark individual files as restricted even when the dataset metadata is publicly visible. The Dataverse API signals this via a `"restricted": true` flag per file. These files were recorded in the FILES table with status `FAILED_LOGIN_REQUIRED` rather than skipped silently. This preserves the knowledge that the data exists but is inaccessible without credentials.
-
-### 4. Ambiguity Between People's Roles
-
-Both repositories use a single contributor field without distinguishing between the person who uploaded the dataset, the original author(s) of the research, and the data owner (often an institution). DANS stores a "depositor" field separately from "author", but the distinction between depositor and uploader is not always clear. Uni Halle uses `dc.contributor.author` and `dc.creator` interchangeably. Where the role could be inferred, `AUTHOR` or `UPLOADER` were assigned; where it could not, `UNKNOWN` was used.
-
-### 5. Multiple Licenses on a Single Project
-
-Several DANS datasets specify more than one license — for instance, a CC BY 4.0 license on the dataset itself and a separate custom institutional license on individual files. The current schema stores one license per LICENSES row, so multiple licenses result in multiple rows for the same project. This is correct behaviour for Part 1 but means Part 2 must handle the case where projects have conflicting or redundant license entries.
-
-### 6. Version History and Duplicate Projects
-
-Dataverse (DANS) maintains version history for datasets. The same intellectual project may appear as v1, v2, v3 with different file sets. The current scraper targets the `:latest` version only. If a project was updated between two pipeline runs, the older version's files may differ from what is on disk. This is a known limitation to be addressed in Part 2.
-
-### 7. Lack of QDA-Specific Filtering
-
-Neither repository has a dedicated filter for "QDA files". Searching for `qdpx` or `mqda` returns results only when the uploader happened to mention the file format in their metadata. Many qualitative datasets contain `.qdpx` files without mentioning the format by name in any metadata field — they can only be found by inspecting the actual file list. This means recall is inherently limited at the metadata-search stage; a full file-listing crawl would be needed for completeness.
+Metadata completeness differs greatly between repositories. Missing descriptions, inconsistent dates and multiple language formats are common.
 
 ---
 
-## Submission Checklist
+## 2. Keyword Quality
 
-- [x] `23129103-seeding.db` in root of GitHub repository
-- [x] Git tag `part-1-release` on final commit
-- [ ] `data/` folder uploaded to FAUbox 
-- [ ] Professor's submission form filled in with GitHub link and data folder link
+Keywords often contain multiple concepts within one field or use inconsistent separators. Original values were preserved.
 
 ---
 
-## License
+## 3. Restricted Files
 
-This code is written for academic purposes as part of the SQ26 project at FAU Erlangen-Nürnberg. The downloaded research data retains its original licenses as recorded in the database.
+Many datasets provide public metadata but restrict access to downloadable files. These files are stored with the status:
+
+- FAILED_LOGIN_REQUIRED
+
+---
+
+## 4. Contributor Roles
+
+Repositories do not always distinguish clearly between author, uploader and owner. Roles were assigned whenever they could be inferred.
+
+---
+
+## 5. Multiple Licenses
+
+Some datasets contain more than one license. Each license is stored as a separate row in the LICENSES table.
+
+---
+
+## 6. Dataset Versions
+
+DANS maintains multiple versions of datasets. Only the latest version is downloaded.
+
+---
+
+## 7. QDA File Discovery
+
+Many repositories do not explicitly identify QDA software files. Discovery therefore depends on available metadata and downloadable file lists.
+
+---
+
+# QDArchive Seeding – Part 2: Classification
+
+## Overview
+
+Part 2 extends the Part 1 data acquisition pipeline by classifying the collected projects according to the SQ26 assignment requirements.
+
+Using the database created in Part 1 (`23129103-seeding.db`), the classification pipeline:
+
+- Migrates the database schema
+- Determines the project type
+- Assigns ISIC Revision 5 classifications
+- Generates the required PDF report
+- Generates the required Excel results
+
+---
+
+# Classification Database
+
+Part 2 creates a new SQLite database:
+
+```text
+23129103-sq26-classification.db
+```
+
+The original acquisition database remains unchanged.
+
+The following fields are added to the **PROJECTS** table.
+
+| Column | Description |
+|---------|-------------|
+| type | Project type |
+| primary_class | ISIC primary classification |
+| secondary_class | ISIC secondary classification |
+
+The **FILES** table is extended with:
+
+| Column | Description |
+|---------|-------------|
+| primary_class | Inherited project classification |
+
+---
+
+# Classification Workflow
+
+The pipeline consists of four stages.
+
+## Stage 1 — Schema Migration
+
+The Part 1 database is copied and extended with the required classification columns.
+
+---
+
+## Stage 2 — Project Type Classification
+
+Projects are classified using the file extensions stored in the FILES table.
+
+Possible project types are:
+
+| Project Type | Description |
+|--------------|-------------|
+| **QDA_PROJECT** | Contains recognised qualitative analysis software files (QDPX, NVivo, MAXQDA, Atlas.ti, etc.) |
+| **QD_PROJECT** | Contains qualitative research data files such as PDF, DOCX, TXT, images, audio or video. |
+| **OTHER_PROJECT** | Contains files but does not satisfy the previous categories. |
+| **NOT_A_PROJECT** | No qualifying project files detected. |
+
+---
+
+## Stage 3 — ISIC Revision 5 Classification
+
+Projects classified as **QDA_PROJECT** or **QD_PROJECT** are compared against the official ISIC Revision 5 taxonomy.
+
+The classifier analyses:
+
+- Project title
+- Project description
+- Project keywords
+
+A TF-IDF similarity model compares the project metadata with the official ISIC division descriptions.
+
+The highest-scoring division becomes the **Primary Class**.
+
+When another division receives a similar score, it is stored as the **Secondary Class**.
+
+---
+
+## Stage 4 — Report Generation
+
+The pipeline automatically generates:
+
+- Classification database
+- Classification report (PDF)
+- Classification results (XLSX)
+
+The PDF report contains:
+
+- Histogram of primary classes
+- Top 20 ISIC classes
+- Repository-specific comments
+
+---
+
+# Results Summary
+
+## Repository #5 — DANS SSH DataStations
+
+| Metric | Value |
+|---------|------:|
+| Total Projects | 4,874 |
+| QDA_PROJECT | 15 |
+| QD_PROJECT | 3,739 |
+| OTHER_PROJECT | 1,114 |
+| NOT_A_PROJECT | 6 |
+
+Projects receiving a primary ISIC classification:
+
+**3,752**
+
+Most common class:
+
+**Q85 – Education**
+
+---
+
+## Repository #16 — Open Data Uni Halle
+
+| Metric | Value |
+|---------|------:|
+| Total Projects | 2,637 |
+| Classified Projects | 0 |
+
+The available metadata and file information did not satisfy the rules required to classify projects as **QDA_PROJECT** or **QD_PROJECT**. Consequently, no ISIC classifications were assigned for this repository.
+
+---
+
+# Classification Outputs
+
+Part 2 generates the following deliverables.
+
+```text
+23129103-sq26-classification.db
+23129103-sq26-classification-results.xlsx
+23129103-sq26-classification-report.pdf
+```
+
+---
+
+# Technical Challenges (Part 2)
+
+## 1. Metadata Quality
+
+Many projects contain only short titles or limited descriptions, reducing the amount of information available for metadata-based classification.
+
+---
+
+## 2. Keyword Consistency
+
+Keywords are often stored as comma-separated strings or mixed-language values. Original metadata was preserved without modification.
+
+---
+
+## 3. Restricted Files
+
+Many datasets contain restricted files requiring authentication. These files cannot be analysed directly during classification.
+
+---
+
+## 4. Metadata-Based Classification
+
+Classification relies on project metadata rather than file contents. Projects with limited metadata may therefore receive less specific ISIC classifications.
+
+---
+
+## 5. Repository Differences
+
+DANS contains substantially richer metadata and downloadable files, enabling successful classification for most projects.
+
+Open Data Uni Halle contains comparatively limited classifiable metadata and file information, resulting in no ISIC assignments.
+
+---
+
+# Part 2 Submission Checklist
+
+- [x] `23129103-sq26-classification.db`
+- [x] Classification pipeline completed
+- [x] Classification report (PDF)
+- [x] Classification results (XLSX)
+- [x] Updated README
+
+---
+
+# Overall Project
+
+This repository now contains the complete implementation of:
+
+- **Part 1 – Data Acquisition**
+- **Part 2 – Classification**
+
+The complete workflow includes:
+
+- Multi-repository data acquisition
+- Metadata extraction
+- SQLite database generation
+- Project type classification
+- ISIC Revision 5 classification
+- Automated PDF report generation
+- Automated Excel report generation
+
+while preserving the original repository metadata throughout the pipeline.
+
+---
+
+# Final Submission Checklist
+
+## Part 1
+
+- [x] Acquisition database
+- [x] Data acquisition pipeline
+- [x] Downloaded research data
+- [x] GitHub repository
+- [x] README documentation
+
+## Part 2
+
+- [x] Classification database
+- [x] Classification report (PDF)
+- [x] Classification results (XLSX)
+- [x] Classification pipeline
+- [x] Updated repository documentation
+
+---
+
+# License
+
+This repository was developed for academic purposes as part of the **SQ26 – Seeding QDArchive** project at **Friedrich-Alexander-Universität Erlangen-Nürnberg** under the supervision of **Prof. Dr. Dirk Riehle**.
+
+The downloaded research data remains subject to the original licenses specified by their respective repositories.
